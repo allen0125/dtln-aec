@@ -5,6 +5,7 @@ requires = [
     "tensorflow",
     "wavinfo",
     "librosa",
+    "requests",
 ]
 
 tests_require = ["pytest"]
