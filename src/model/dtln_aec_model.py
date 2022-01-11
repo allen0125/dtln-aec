@@ -342,11 +342,7 @@ class DTLN_model:
         steps_train = generator_input.total_samples // self.batchsize
         # create data generator for validation data
         generator_val = audio_generator(
-            path_to_val_mix,
-            path_to_val_mic,
-            path_to_val_lpb,
-            len_in_samples,
-            self.fs
+            path_to_val_mix, path_to_val_mic, path_to_val_lpb, len_in_samples, self.fs
         )
         dataset_val = generator_val.tf_data_set
         dataset_val = dataset_val.batch(self.batchsize, drop_remainder=True).repeat()
