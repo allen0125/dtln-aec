@@ -108,26 +108,24 @@ class audio_generator:
                     )
                 ]
                 # yield the chunks as float32 data
-                yield [
+                yield (
                     mixed_dat.astype("float32"),
                     mic_dat.astype("float32"),
-                ], lpb_dat.astype("float32")
+                ), lpb_dat.astype("float32")
 
     def create_tf_data_obj(self):
         """
         Method to to create the tf.data.Dataset.
         """
 
+        types = ((tf.float32,tf.float32),
+          tf.float32)
+        shapes = (([self.len_of_samples],[self.len_of_samples]),
+                [self.len_of_samples])
         # creating the tf.data.Dataset from the iterator
         self.tf_data_set = tf.data.Dataset.from_generator(
             self.create_generator,
-            ([tf.float32, tf.float32], tf.float32),
-            output_shapes=(
-                [
-                    tf.TensorShape([self.len_of_samples]),
-                    tf.TensorShape([self.len_of_samples]),
-                ],
-                tf.TensorShape([self.len_of_samples]),
-            ),
+            types,
+            output_shapes=shapes,
             args=None,
         )
