@@ -332,7 +332,6 @@ class DTLN_model:
         layer.
         """
 
-        
         # input layer for time signal
         mic_time_dat = Input(batch_shape=(None, None))
         lpb_time_dat = Input(batch_shape=(None, None))
@@ -351,29 +350,40 @@ class DTLN_model:
             mag_norm = mic_mag
             lpb_mag_norm = lpb_mag
         mag_norm = tf.concat([mag_norm, lpb_mag_norm], axis=0)
-        # predicting mask with separation kernel  
-        mask_1 = self.seperation_kernel(self.numLayer, (self.blockLen//2+1), mag_norm)
+        # predicting mask with separation kernel
+        mask_1 = self.seperation_kernel(
+            self.numLayer, (self.blockLen // 2 + 1), mag_norm
+        )
         # multiply mask with magnitude
         estimated_mag = Multiply()([mic_mag, mask_1])
         # transform frames back to time domain
-        estimated_frames_1 = Lambda(self.ifftLayer)([estimated_mag,mic_angle])
+        estimated_frames_1 = Lambda(self.ifftLayer)([estimated_mag, mic_angle])
         # encode time domain frames to feature domain
-        encoded_frames = Conv1D(self.encoder_size,1,strides=1,use_bias=False)(estimated_frames_1)
-        encoded_lpb = Conv1D(self.encoder_size,1,strides=1,use_bias=False)(lpb_frames_1)
+        encoded_frames = Conv1D(self.encoder_size, 1, strides=1, use_bias=False)(
+            estimated_frames_1
+        )
+        encoded_lpb = Conv1D(self.encoder_size, 1, strides=1, use_bias=False)(
+            lpb_frames_1
+        )
         # normalize the input to the separation kernel
         encoded_frames_norm = InstantLayerNormalization()(encoded_frames)
         encoded_lpb_norm = InstantLayerNormalization()(encoded_lpb)
-        encoded_frames_concat = tf.concat([encoded_frames_norm,encoded_lpb_norm],axis=0)
+        encoded_frames_concat = tf.concat(
+            [encoded_frames_norm, encoded_lpb_norm], axis=0
+        )
         # predict mask based on the normalized feature frames
-        mask_2 = self.seperation_kernel(self.numLayer, self.encoder_size, encoded_frames_concat)
+        mask_2 = self.seperation_kernel(
+            self.numLayer, self.encoder_size, encoded_frames_concat
+        )
         # multiply encoded frames with the mask
-        estimated = Multiply()([encoded_frames, mask_2]) 
+        estimated = Multiply()([encoded_frames, mask_2])
         # decode the frames back to time domain
-        decoded_frames = Conv1D(self.blockLen, 1, padding='causal',use_bias=False)(estimated)
+        decoded_frames = Conv1D(self.blockLen, 1, padding="causal", use_bias=False)(
+            estimated
+        )
         # create waveform with overlap and add procedure
         estimated_sig = Lambda(self.overlapAddLayer)(decoded_frames)
 
-        
         # create the model
         self.model = Model(inputs=[mic_time_dat, lpb_time_dat], outputs=estimated_sig)
         # show the model summary
@@ -540,6 +550,7 @@ class InstantLayerNormalization(Layer):
         # add the bias beta
         outputs = outputs + self.beta
         return outputs
+
 
 model = DTLN_model()
 model.build_dtln_aec_model()
