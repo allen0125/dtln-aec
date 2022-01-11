@@ -184,43 +184,6 @@ class DTLN_model:
         # returning the mask
         return mask
 
-    def seperation_kernel_with_states(self, num_layer, mask_size, x, in_states):
-        """
-        Method to create a separation kernel, which returns the LSTM states.
-        !! Important !!: Do not use this layer with a Lambda layer. If used with
-        a Lambda layer the gradients are updated correctly.
-
-        Inputs:
-            num_layer       Number of LSTM layers
-            mask_size       Output size of the mask and size of the Dense layer
-        """
-
-        states_h = []
-        states_c = []
-        # creating num_layer number of LSTM layers
-        for idx in range(num_layer):
-            in_state = [in_states[:, idx, :, 0], in_states[:, idx, :, 1]]
-            x, h_state, c_state = LSTM(
-                self.numUnits, return_sequences=True, unroll=True, return_state=True
-            )(x, initial_state=in_state)
-            # using dropout between the LSTM layer for regularization
-            if idx < (num_layer - 1):
-                x = Dropout(self.dropout)(x)
-            states_h.append(h_state)
-            states_c.append(c_state)
-        # creating the mask with a Dense and an Activation layer
-        mask = Dense(mask_size)(x)
-        mask = Activation(self.activation)(mask)
-        out_states_h = tf.reshape(
-            tf.stack(states_h, axis=0), [1, num_layer, self.numUnits]
-        )
-        out_states_c = tf.reshape(
-            tf.stack(states_c, axis=0), [1, num_layer, self.numUnits]
-        )
-        out_states = tf.stack([out_states_h, out_states_c], axis=-1)
-        # returning the mask and states
-        return mask, out_states
-
     def build_dtln_aec_model(self, norm_stft=False):
         """
         Method to build and compile the DTLN model. The model takes time domain
