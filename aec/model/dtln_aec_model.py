@@ -22,7 +22,7 @@ import tensorflow as tf
 from random import seed
 import numpy as np
 
-from .aec_blood import audio_generator
+from aec.model.aec_blood import audio_generator
 
 
 class DTLN_model:
