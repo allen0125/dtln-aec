@@ -22,7 +22,7 @@ import tensorflow as tf
 from random import seed
 import numpy as np
 
-from .audio_generator import audio_generator
+from .aec_blood import audio_generator
 
 
 class DTLN_model:
@@ -283,9 +283,11 @@ class DTLN_model:
         self,
         runName,
         path_to_train_mix,
-        path_to_train_speech,
+        path_to_train_mic,
+        path_to_train_lpb,
         path_to_val_mix,
-        path_to_val_speech,
+        path_to_val_mic,
+        path_to_val_lpb,
     ):
         """
         Method to train the DTLN model.
@@ -328,7 +330,8 @@ class DTLN_model:
         # create data generator for training data
         generator_input = audio_generator(
             path_to_train_mix,
-            path_to_train_speech,
+            path_to_train_mic,
+            path_to_train_lpb,
             len_in_samples,
             self.fs,
             train_flag=True,
@@ -339,7 +342,11 @@ class DTLN_model:
         steps_train = generator_input.total_samples // self.batchsize
         # create data generator for validation data
         generator_val = audio_generator(
-            path_to_val_mix, path_to_val_speech, len_in_samples, self.fs
+            path_to_val_mix,
+            path_to_val_mic,
+            path_to_val_lpb,
+            len_in_samples,
+            self.fs
         )
         dataset_val = generator_val.tf_data_set
         dataset_val = dataset_val.batch(self.batchsize, drop_remainder=True).repeat()

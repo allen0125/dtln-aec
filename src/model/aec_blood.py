@@ -13,19 +13,29 @@ class audio_generator:
     audio dataset. This audio generator only supports single channel audio files.
     """
 
-    def __init__(self, path_to_input, path_to_s1, len_of_samples, fs, train_flag=False):
+    def __init__(
+        self,
+        path_to_input,
+        path_to_mic,
+        path_to_lpb,
+        len_of_samples,
+        fs,
+        train_flag=False,
+    ):
         """
         Constructor of the audio generator class.
         Inputs:
             path_to_input       path to the mixtures
-            path_to_s1          path to the target source data
+            path_to_mic         path to the mic audio
+            path_to_lpb         path to the lpb audio
             len_of_samples      length of audio snippets in samples
             fs                  sampling rate
             train_flag          flag for activate shuffling of files
         """
         # set inputs to properties
         self.path_to_input = path_to_input
-        self.path_to_s1 = path_to_s1
+        self.path_to_mic = path_to_mic
+        self.path_to_lpb = path_to_lpb
         self.len_of_samples = len_of_samples
         self.fs = fs
         self.train_flag = train_flag
@@ -61,33 +71,46 @@ class audio_generator:
         # iterate over the files
         for file in self.file_names:
             # read the audio files
-            noisy, fs_1 = sf.read(os.path.join(self.path_to_input, file))
-            speech, fs_2 = sf.read(os.path.join(self.path_to_s1, file))
+            real_file_name = file.split("-")[0]
+            mixed, fs_1 = sf.read(os.path.join(self.path_to_input, file))
+            mic, fs_2 = sf.read(
+                os.path.join(self.path_to_mic, real_file_name + "-mic.wav")
+            )
+            lpb, fs_3 = sf.read(
+                os.path.join(self.path_to_lpb, real_file_name + "-lpb.wav")
+            )
             # check if the sampling rates are matching the specifications
-            if fs_1 != self.fs or fs_2 != self.fs:
+            if fs_1 != self.fs or fs_2 != self.fs or fs_3 != self.fs:
                 raise ValueError("Sampling rates do not match.")
-            if noisy.ndim != 1 or speech.ndim != 1:
+            if mixed.ndim != 1 or mic.ndim != 1 or lpb.ndim != 1:
                 raise ValueError(
                     "Too many audio channels. The DTLN audio_generator \
                                  only supports single channel audio data."
                 )
             # count the number of samples in one file
-            num_samples = int(np.fix(noisy.shape[0] / self.len_of_samples))
+            num_samples = int(np.fix(mixed.shape[0] / self.len_of_samples))
             # iterate over the number of samples
             for idx in range(num_samples):
                 # cut the audio files in chunks
-                in_dat = noisy[
+                mixed_dat = mixed[
                     int(idx * self.len_of_samples) : int(
                         (idx + 1) * self.len_of_samples
                     )
                 ]
-                tar_dat = speech[
+                mic_dat = mic[
+                    int(idx * self.len_of_samples) : int(
+                        (idx + 1) * self.len_of_samples
+                    )
+                ]
+                lpb_dat = lpb[
                     int(idx * self.len_of_samples) : int(
                         (idx + 1) * self.len_of_samples
                     )
                 ]
                 # yield the chunks as float32 data
-                yield in_dat.astype("float32"), tar_dat.astype("float32")
+                yield mixed_dat.astype("float32"), mic_dat.astype(
+                    "float32"
+                ), lpb_dat.astype("float32")
 
     def create_tf_data_obj(self):
         """
@@ -97,8 +120,9 @@ class audio_generator:
         # creating the tf.data.Dataset from the iterator
         self.tf_data_set = tf.data.Dataset.from_generator(
             self.create_generator,
-            (tf.float32, tf.float32),
+            (tf.float32, tf.float32, tf.float32),
             output_shapes=(
+                tf.TensorShape([self.len_of_samples]),
                 tf.TensorShape([self.len_of_samples]),
                 tf.TensorShape([self.len_of_samples]),
             ),
