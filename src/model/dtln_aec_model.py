@@ -1,4 +1,4 @@
-import os, fnmatch
+import os
 import tensorflow.keras as keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
@@ -19,110 +19,10 @@ from tensorflow.keras.callbacks import (
     ModelCheckpoint,
 )
 import tensorflow as tf
-import soundfile as sf
-from tensorflow.python.ops.gen_batch_ops import batch
-from wavinfo import WavInfoReader
-from random import shuffle, seed
+from random import seed
 import numpy as np
 
-
-class audio_generator:
-    """
-    Class to create a Tensorflow dataset based on an iterator from a large scale
-    audio dataset. This audio generator only supports single channel audio files.
-    """
-
-    def __init__(self, path_to_input, path_to_s1, len_of_samples, fs, train_flag=False):
-        """
-        Constructor of the audio generator class.
-        Inputs:
-            path_to_input       path to the mixtures
-            path_to_s1          path to the target source data
-            len_of_samples      length of audio snippets in samples
-            fs                  sampling rate
-            train_flag          flag for activate shuffling of files
-        """
-        # set inputs to properties
-        self.path_to_input = path_to_input
-        self.path_to_s1 = path_to_s1
-        self.len_of_samples = len_of_samples
-        self.fs = fs
-        self.train_flag = train_flag
-        # count the number of samples in your data set (depending on your disk,
-        #                                               this can take some time)
-        self.count_samples()
-        # create iterable tf.data.Dataset object
-        self.create_tf_data_obj()
-
-    def count_samples(self):
-        """
-        Method to list the data of the dataset and count the number of samples.
-        """
-
-        # list .wav files in directory
-        self.file_names = fnmatch.filter(os.listdir(self.path_to_input), "*.wav")
-        # count the number of samples contained in the dataset
-        self.total_samples = 0
-        for file in self.file_names:
-            info = WavInfoReader(os.path.join(self.path_to_input, file))
-            self.total_samples = self.total_samples + int(
-                np.fix(info.data.frame_count / self.len_of_samples)
-            )
-
-    def create_generator(self):
-        """
-        Method to create the iterator.
-        """
-
-        # check if training or validation
-        if self.train_flag:
-            shuffle(self.file_names)
-        # iterate over the files
-        for file in self.file_names:
-            # read the audio files
-            noisy, fs_1 = sf.read(os.path.join(self.path_to_input, file))
-            speech, fs_2 = sf.read(os.path.join(self.path_to_s1, file))
-            # check if the sampling rates are matching the specifications
-            if fs_1 != self.fs or fs_2 != self.fs:
-                raise ValueError("Sampling rates do not match.")
-            if noisy.ndim != 1 or speech.ndim != 1:
-                raise ValueError(
-                    "Too many audio channels. The DTLN audio_generator \
-                                 only supports single channel audio data."
-                )
-            # count the number of samples in one file
-            num_samples = int(np.fix(noisy.shape[0] / self.len_of_samples))
-            # iterate over the number of samples
-            for idx in range(num_samples):
-                # cut the audio files in chunks
-                in_dat = noisy[
-                    int(idx * self.len_of_samples) : int(
-                        (idx + 1) * self.len_of_samples
-                    )
-                ]
-                tar_dat = speech[
-                    int(idx * self.len_of_samples) : int(
-                        (idx + 1) * self.len_of_samples
-                    )
-                ]
-                # yield the chunks as float32 data
-                yield in_dat.astype("float32"), tar_dat.astype("float32")
-
-    def create_tf_data_obj(self):
-        """
-        Method to to create the tf.data.Dataset.
-        """
-
-        # creating the tf.data.Dataset from the iterator
-        self.tf_data_set = tf.data.Dataset.from_generator(
-            self.create_generator,
-            (tf.float32, tf.float32),
-            output_shapes=(
-                tf.TensorShape([self.len_of_samples]),
-                tf.TensorShape([self.len_of_samples]),
-            ),
-            args=None,
-        )
+from .audio_generator import audio_generator
 
 
 class DTLN_model:
@@ -184,7 +84,7 @@ class DTLN_model:
         # returning the loss
         return loss
 
-    def lossWrapper(self):
+    def loss_wrapper(self):
         """
         A wrapper function which returns the loss function. This is done to
         to enable additional arguments to the loss function if necessary.
@@ -205,7 +105,7 @@ class DTLN_model:
     In the following some helper layers are defined.
     """
 
-    def stftLayer(self, x):
+    def stft_layer(self, x):
         """
         Method for an STFT helper layer used with a Lambda layer. The layer
         calculates the STFT on the last dimension and returns the magnitude and
@@ -222,7 +122,7 @@ class DTLN_model:
         # returning magnitude and phase as list
         return [mag, phase]
 
-    def fftLayer(self, x):
+    def fft_layer(self, x):
         """
         Method for an fft helper layer used with a Lambda layer. The layer
         calculates the rFFT on the last dimension and returns the magnitude and
@@ -238,7 +138,7 @@ class DTLN_model:
         # returning magnitude and phase as list
         return [mag, phase]
 
-    def ifftLayer(self, x):
+    def ifft_layer(self, x):
         """
         Method for an inverse FFT layer used with an Lambda layer. This layer
         calculates time domain frames from magnitude and phase information.
@@ -252,7 +152,7 @@ class DTLN_model:
         # returning the time domain frames
         return tf.signal.irfft(s1_stft)
 
-    def overlapAddLayer(self, x):
+    def overlap_add_layer(self, x):
         """
         Method for an overlap and add helper layer used with a Lambda layer.
         This layer reconstructs the waveform from a framed signal.
@@ -336,11 +236,10 @@ class DTLN_model:
         mic_time_dat = Input(batch_shape=(None, None))
         lpb_time_dat = Input(batch_shape=(None, None))
         # calculate STFT
-        mic_mag, mic_angle = Lambda(self.stftLayer)(mic_time_dat)
-        lpb_mag, lpb_angle = Lambda(self.stftLayer)(lpb_time_dat)
-        # lpb_frames_1 = Lambda(self.ifftLayer)([lpb_mag,lpb_angle])
+        mic_mag, mic_angle = Lambda(self.stft_layer)(mic_time_dat)
+        lpb_mag, lpb_angle = Lambda(self.stft_layer)(lpb_time_dat)
+        # lpb_frames_1 = Lambda(self.ifft_layer)([lpb_mag,lpb_angle])
         lpb_frames_1 = tf.signal.frame(lpb_time_dat, self.blockLen, self.block_shift)
-        print(lpb_frames_1)
         # normalizing log magnitude stfts to get more robust against level variations
         if norm_stft:
             mag_norm = InstantLayerNormalization()(tf.math.log(mic_mag + 1e-7))
@@ -357,7 +256,7 @@ class DTLN_model:
         # multiply mask with magnitude
         estimated_mag = Multiply()([mic_mag, mask_1])
         # transform frames back to time domain
-        estimated_frames_1 = Lambda(self.ifftLayer)([estimated_mag, mic_angle])
+        estimated_frames_1 = Lambda(self.ifft_layer)([estimated_mag, mic_angle])
         # encode time domain frames to feature domain
         encoded_frames = Conv1D(self.encoder_size, 1, strides=1, use_bias=False)(
             estimated_frames_1
@@ -382,7 +281,7 @@ class DTLN_model:
             estimated
         )
         # create waveform with overlap and add procedure
-        estimated_sig = Lambda(self.overlapAddLayer)(decoded_frames)
+        estimated_sig = Lambda(self.overlap_add_layer)(decoded_frames)
 
         # create the model
         self.model = Model(inputs=[mic_time_dat, lpb_time_dat], outputs=estimated_sig)
@@ -398,7 +297,7 @@ class DTLN_model:
         # use the Adam optimizer with a clipnorm of 3
         optimizerAdam = keras.optimizers.Adam(lr=self.lr, clipnorm=3.0)
         # compile model with loss function
-        self.model.compile(loss=self.lossWrapper(), optimizer=optimizerAdam)
+        self.model.compile(loss=self.loss_wrapper(), optimizer=optimizerAdam)
 
     def create_saved_model(self, weights_file, target_name):
         """
