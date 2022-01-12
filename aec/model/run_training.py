@@ -7,17 +7,17 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ["TF_DETERMINISTIC_OPS"] = "1"
 
 # path to folder containing the mixed audio training files
-path_to_train_mix = "/Users/allen/Project/YaShi/aec/data/train_data/mixed"
+path_to_train_mix = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/mixed"
 # path to folder containing the mic audio files for training
-path_to_train_mic = "/Users/allen/Project/YaShi/aec/data/train_data/mic"
+path_to_train_mic = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/mic"
 # path to folder containing the lpb audio files for training
-path_to_train_lpb = "/Users/allen/Project/YaShi/aec/data/train_data/lpb"
+path_to_train_lpb = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/lpb"
 # path to folder containing the mixed audio validation data
-path_to_val_mix = "/Users/allen/Project/YaShi/aec/data/train_data/mixed"
+path_to_val_mix = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/mixed"
 # path to folder containing the mic audio validation data
-path_to_val_mic = "/Users/allen/Project/YaShi/aec/data/train_data/mic"
+path_to_val_mic = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/mic"
 # path to folder containing the lpb audio files for validation
-path_to_val_lpb = "/Users/allen/Project/YaShi/aec/data/train_data/lpb"
+path_to_val_lpb = "/Users/allen/Project/YaShi/aec/data/train_data_aligned/lpb"
 
 # name your training run
 run_name = "DTLN_AEC_model"

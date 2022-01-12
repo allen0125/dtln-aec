@@ -71,7 +71,7 @@ class audio_generator:
         # iterate over the files
         for file in self.file_names:
             # read the audio files
-            real_file_name = file.split("-")[0]
+            real_file_name = '-'.join(file.split("-")[0:3])
             mixed, fs_1 = sf.read(os.path.join(self.path_to_input, file))
             mic, fs_2 = sf.read(
                 os.path.join(self.path_to_mic, real_file_name + "-mic.wav")

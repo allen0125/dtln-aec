@@ -1,7 +1,7 @@
 import os
 from pydub import AudioSegment
 
-mix_output_dir = "/Users/allen/Project/YaShi/aec/data/origin_data/mix/bgm-45"
+mix_output_dir = "/Users/allen/Project/YaShi/aec/data/origin_data/mix/originloudness"
 
 
 def loudnorm(audio_segment: AudioSegment, db: float) -> AudioSegment:
@@ -16,14 +16,12 @@ def mix_mic_lpb(base):
                 print(f)
                 lpb_f = f.replace("-mic", "-lpb")
                 mic_audio_segment = AudioSegment.from_wav(os.path.join(base, f))
-                lpb_audio_segment = loudnorm(
-                    AudioSegment.from_wav(os.path.join(base, lpb_f)), -45
-                )
+                lpb_audio_segment = AudioSegment.from_wav(os.path.join(base, lpb_f))
                 mix_audio = mic_audio_segment.overlay(lpb_audio_segment, position=0)
-                output_file_name = f.replace("-mic", "-mix-bgm-45")
+                output_file_name = f.replace("-mic", "-mix-bgm-originloudness")
                 mix_audio.export(
                     os.path.join(mix_output_dir, output_file_name), format="wav"
                 )
 
 
-mix_mic_lpb("/Users/allen/Project/YaShi/aec/data/origin_data/wav")
+mix_mic_lpb("/Users/allen/Project/YaShi/aec/data/origin_data/align_wav")
