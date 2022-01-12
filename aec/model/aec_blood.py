@@ -71,7 +71,7 @@ class audio_generator:
         # iterate over the files
         for file in self.file_names:
             # read the audio files
-            real_file_name = '-'.join(file.split("-")[0:3])
+            real_file_name = "-".join(file.split("-")[0:3])
             mixed, fs_1 = sf.read(os.path.join(self.path_to_input, file))
             mic, fs_2 = sf.read(
                 os.path.join(self.path_to_mic, real_file_name + "-mic.wav")
@@ -118,10 +118,8 @@ class audio_generator:
         Method to to create the tf.data.Dataset.
         """
 
-        types = ((tf.float32,tf.float32),
-          tf.float32)
-        shapes = (([self.len_of_samples],[self.len_of_samples]),
-                [self.len_of_samples])
+        types = ((tf.float32, tf.float32), tf.float32)
+        shapes = (([self.len_of_samples], [self.len_of_samples]), [self.len_of_samples])
         # creating the tf.data.Dataset from the iterator
         self.tf_data_set = tf.data.Dataset.from_generator(
             self.create_generator,
