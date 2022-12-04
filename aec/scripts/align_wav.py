@@ -2,10 +2,10 @@ import os
 from pydub import AudioSegment
 
 
-origin_path = "/Users/allen/Project/YaShi/aec/data/origin_data/wav"
-align_output_path = "/Users/allen/Project/YaShi/aec/data/origin_data/align_wav"
-align_mic_output_path = "/Users/allen/Project/YaShi/aec/data/origin_data/align_wav/mic"
-align_lpb_output_path = "/Users/allen/Project/YaShi/aec/data/origin_data/align_wav/lpb"
+origin_path = "/home/allen/Data/ainur/aec/origin_data/wav"
+align_output_path = "/home/allen/Data/ainur/aec/train_data_aligned/align_wav_lpb_mic"
+align_mic_output_path = "/home/allen/Data/ainur/aec/train_data_aligned/mic"
+align_lpb_output_path = "/home/allen/Data/ainur/aec/train_data_aligned/lpb"
 
 
 def align_mic_lpb(base, len_of_samples):
@@ -40,13 +40,13 @@ def align_mic_lpb(base, len_of_samples):
                     ]
                     mic_output.export(
                         os.path.join(
-                            align_mic_output_path, real_name + f"-aligned-{i}-mic.wav"
+                            align_output_path, real_name + f"-aligned-{i}-mic.wav"
                         ),
                         format="wav",
                     )
                     lpb_output.export(
                         os.path.join(
-                            align_lpb_output_path, real_name + f"-aligned-{i}-lpb.wav"
+                            align_output_path, real_name + f"-aligned-{i}-lpb.wav"
                         ),
                         format="wav",
                     )

@@ -44,7 +44,7 @@ class DTLN_model:
         self.batchsize = 32
         self.len_samples = 15
         self.activation = "sigmoid"
-        self.numUnits = 128
+        self.numUnits = 512
         self.numLayer = 2
         self.blockLen = 512
         self.block_shift = 128
@@ -211,7 +211,7 @@ class DTLN_model:
             # behaviour like in the paper
             mag_norm = mic_mag
             lpb_mag_norm = lpb_mag
-        mag_norm = tf.concat([mag_norm, lpb_mag_norm], axis=-1)
+        mag_norm = tf.concat([lpb_mag_norm, mag_norm], axis=-1)
         # predicting mask with separation kernel
         mask_1 = self.seperation_kernel(
             self.numLayer, (self.blockLen // 2 + 1), mag_norm
@@ -231,7 +231,7 @@ class DTLN_model:
         encoded_frames_norm = InstantLayerNormalization()(encoded_frames)
         encoded_lpb_norm = InstantLayerNormalization()(encoded_lpb)
         encoded_frames_concat = tf.concat(
-            [encoded_frames_norm, encoded_lpb_norm], axis=-1
+            [encoded_lpb_norm, encoded_frames_norm], axis=-1
         )
         # predict mask based on the normalized feature frames
         mask_2 = self.seperation_kernel(

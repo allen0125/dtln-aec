@@ -1,7 +1,7 @@
 import os
 from pydub import AudioSegment
 
-mix_output_dir = "/Users/allen/Project/YaShi/aec/data/origin_data/mix/originloudness"
+mix_output_dir = "/home/allen/Data/ainur/aec/train_data_aligned/mixed"
 
 
 def loudnorm(audio_segment: AudioSegment, db: float) -> AudioSegment:
@@ -24,4 +24,4 @@ def mix_mic_lpb(base):
                 )
 
 
-mix_mic_lpb("/Users/allen/Project/YaShi/aec/data/origin_data/align_wav")
+mix_mic_lpb("/home/allen/Data/ainur/aec/train_data_aligned/align_wav_lpb_mic/")
