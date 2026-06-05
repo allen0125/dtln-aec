@@ -23,8 +23,8 @@ path_to_val_lpb = "/home/allen/Data/ainur/aec/train_data_aligned/lpb"
 run_name = "DTLN_AEC_model_lpb_first_512_LSTM"
 # create instance of the DTLN model class
 model_trainer = DTLN_model()
-# build the model
-model_trainer.build_dtln_aec_model()
+# build the model (norm_stft=True -> normalized log power spectra, as in the paper)
+model_trainer.build_dtln_aec_model(norm_stft=True)
 # compile it with optimizer and cost function for training
 model_trainer.compile_model()
 # train the model

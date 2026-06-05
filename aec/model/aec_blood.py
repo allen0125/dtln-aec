@@ -107,11 +107,13 @@ class audio_generator:
                         (idx + 1) * self.len_of_samples
                     )
                 ]
-                # yield the chunks as float32 data
+                # yield the chunks as float32 data.
+                # model inputs  : (echoey mic = mixed, far-end reference = lpb)
+                # training target: clean near-end speech = mic
                 yield (
                     mixed_dat.astype("float32"),
-                    mic_dat.astype("float32"),
-                ), lpb_dat.astype("float32")
+                    lpb_dat.astype("float32"),
+                ), mic_dat.astype("float32")
 
     def create_tf_data_obj(self):
         """

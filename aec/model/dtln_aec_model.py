@@ -51,7 +51,7 @@ class DTLN_model:
         self.dropout = 0.25
         self.lr = 1e-3
         self.max_epochs = 200
-        self.encoder_size = 256
+        self.encoder_size = 512
         self.eps = 1e-7
         # reset all seeds to 42 to reduce invariance between training runs
         os.environ["PYTHONHASHSEED"] = str(42)
@@ -184,7 +184,7 @@ class DTLN_model:
         # returning the mask
         return mask
 
-    def build_dtln_aec_model(self, norm_stft=False):
+    def build_dtln_aec_model(self, norm_stft=True):
         """
         Method to build and compile the DTLN model. The model takes time domain
         batches of size (batchsize, len_in_samples) and returns enhanced clips
@@ -205,10 +205,13 @@ class DTLN_model:
         lpb_frames_1 = tf.signal.frame(lpb_time_dat, self.blockLen, self.block_shift)
         # normalizing log magnitude stfts to get more robust against level variations
         if norm_stft:
+            # behaviour like in the DTLN-aec paper: the first separation core is
+            # fed with the normalized log power spectra of the near-end (mic) and
+            # far-end (lpb) signals, each normalized independently with iLN.
             mag_norm = InstantLayerNormalization()(tf.math.log(mic_mag + 1e-7))
             lpb_mag_norm = InstantLayerNormalization()(tf.math.log(lpb_mag + 1e-7))
         else:
-            # behaviour like in the paper
+            # raw (unnormalized) magnitude spectra
             mag_norm = mic_mag
             lpb_mag_norm = lpb_mag
         mag_norm = tf.concat([lpb_mag_norm, mag_norm], axis=-1)
